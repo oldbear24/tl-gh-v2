@@ -25,7 +25,6 @@ var pool *pgxpool.Pool
 var logOutput *logoutput.LogOutput
 
 func main() {
-	prepareApp()
 	var err error
 	defer logOutput.Close()
 	defer panicRecover()
@@ -108,7 +107,7 @@ func panicRecover() {
 	}
 }
 
-func prepareApp() {
+func init() {
 	var enableExtenal bool
 	var externalLogUrl string
 	var externalLogToken string
