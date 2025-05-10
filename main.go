@@ -24,73 +24,8 @@ var s *discordgo.Session
 var pool *pgxpool.Pool
 var logOutput *logoutput.LogOutput
 
-func init() {
-	var enableExtenal bool
-	var externalLogUrl string
-	var externalLogToken string
-	var externalLogOrg string
-	var externalLogStream string
-	var logLevelInt int
-	for _, env := range os.Environ() {
-		pair := strings.SplitN(env, "=", 2)
-		if len(pair) != 2 {
-			continue
-		}
-		key, value := pair[0], pair[1]
-		if strings.HasPrefix(key, "TLGH_") {
-			switch key {
-			case "TLGH_BOT_TOKEN":
-				botToken = value
-			case "TLGH_POSTGRE_CONN_STRING":
-				postgreConnString = value
-			case "TLGH_EXTLOG_ENABLE":
-				enableExtenal, _ = strconv.ParseBool(value)
-			case "TLGH_LOG_URL":
-				externalLogUrl = value
-			case "TLGH_LOG_TOKEN":
-				externalLogToken = value
-			case "TLGH_LOG_ORG":
-				externalLogOrg = value
-			case "TLGH_LOG_STREAM":
-				externalLogStream = value
-			case "TLGH_LOG_LEVEL":
-				logLevelInt, _ = strconv.Atoi(value)
-			}
-		}
-	}
-	flag.StringVar(&botToken, "t", "", "Bot Token")
-	flag.StringVar(&postgreConnString, "db", "", "PostgreSQL Connection String")
-	flag.BoolVar(&enableExtenal, "extlogenable", false, "Enable External Log")
-	flag.StringVar(&externalLogUrl, "logurl", "", "External Log URL")
-
-	flag.StringVar(&externalLogToken, "logtoken", "", "External Log Token")
-	flag.StringVar(&externalLogOrg, "logorg", "", "External Log Organization")
-	flag.StringVar(&externalLogStream, "logstream", "", "External Log Stream")
-	flag.IntVar(&logLevelInt, "loglevel", 0, "Log Level")
-	flag.Parse()
-
-	var logLevel slog.Level
-	switch logLevelInt {
-	case -4:
-		logLevel = slog.LevelDebug
-	case 0:
-		logLevel = slog.LevelInfo
-	case 4:
-		logLevel = slog.LevelWarn
-	case 8:
-		logLevel = slog.LevelError
-	}
-	logOutput = logoutput.New(enableExtenal, externalLogUrl, externalLogToken, externalLogOrg, externalLogStream)
-	logHandler := slog.NewJSONHandler(logOutput, &slog.HandlerOptions{Level: logLevel, ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-		if a.Key == slog.TimeKey {
-			a.Key = "_timestamp"
-			a.Value = slog.Int64Value(time.Now().UnixMicro())
-		}
-		return a
-	}})
-	log = slog.New(logHandler)
-}
 func main() {
+	prepareApp()
 	var err error
 	defer logOutput.Close()
 	defer panicRecover()
@@ -171,4 +106,71 @@ func panicRecover() {
 		log.Error("Fate has decided to end this program", "error", r)
 		panic(r)
 	}
+}
+
+func prepareApp() {
+	var enableExtenal bool
+	var externalLogUrl string
+	var externalLogToken string
+	var externalLogOrg string
+	var externalLogStream string
+	var logLevelInt int
+	for _, env := range os.Environ() {
+		pair := strings.SplitN(env, "=", 2)
+		if len(pair) != 2 {
+			continue
+		}
+		key, value := pair[0], pair[1]
+		if strings.HasPrefix(key, "TLGH_") {
+			switch key {
+			case "TLGH_BOT_TOKEN":
+				botToken = value
+			case "TLGH_POSTGRE_CONN_STRING":
+				postgreConnString = value
+			case "TLGH_EXTLOG_ENABLE":
+				enableExtenal, _ = strconv.ParseBool(value)
+			case "TLGH_LOG_URL":
+				externalLogUrl = value
+			case "TLGH_LOG_TOKEN":
+				externalLogToken = value
+			case "TLGH_LOG_ORG":
+				externalLogOrg = value
+			case "TLGH_LOG_STREAM":
+				externalLogStream = value
+			case "TLGH_LOG_LEVEL":
+				logLevelInt, _ = strconv.Atoi(value)
+			}
+		}
+	}
+	flag.StringVar(&botToken, "t", "", "Bot Token")
+	flag.StringVar(&postgreConnString, "db", "", "PostgreSQL Connection String")
+	flag.BoolVar(&enableExtenal, "extlogenable", false, "Enable External Log")
+	flag.StringVar(&externalLogUrl, "logurl", "", "External Log URL")
+
+	flag.StringVar(&externalLogToken, "logtoken", "", "External Log Token")
+	flag.StringVar(&externalLogOrg, "logorg", "", "External Log Organization")
+	flag.StringVar(&externalLogStream, "logstream", "", "External Log Stream")
+	flag.IntVar(&logLevelInt, "loglevel", 0, "Log Level")
+	flag.Parse()
+
+	var logLevel slog.Level
+	switch logLevelInt {
+	case -4:
+		logLevel = slog.LevelDebug
+	case 0:
+		logLevel = slog.LevelInfo
+	case 4:
+		logLevel = slog.LevelWarn
+	case 8:
+		logLevel = slog.LevelError
+	}
+	logOutput = logoutput.New(enableExtenal, externalLogUrl, externalLogToken, externalLogOrg, externalLogStream)
+	logHandler := slog.NewJSONHandler(logOutput, &slog.HandlerOptions{Level: logLevel, ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+		if a.Key == slog.TimeKey {
+			a.Key = "_timestamp"
+			a.Value = slog.Int64Value(time.Now().UnixMicro())
+		}
+		return a
+	}})
+	log = slog.New(logHandler)
 }
