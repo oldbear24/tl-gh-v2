@@ -28,7 +28,8 @@ jobs:
     - name: Test
       run: go test -v ./...
   build:
-
+    depends-on: run-tests
+    name: Build
     runs-on: ubuntu-latest
     permissions:
       contents: read
