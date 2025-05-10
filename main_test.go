@@ -1,9 +1,12 @@
 package main
 
-import "flag"
-
-var testLogFile string
+import "testing"
 
 func init() {
-	flag.StringVar(&testLogFile, "testlogfile", "", "Path to test log file")
+	testing.Init()
+}
+func MockTest() {
+	// This function is intentionally left empty.
+	// It is used to initialize the testing package.
+	// You can add any setup code here if needed.
 }
