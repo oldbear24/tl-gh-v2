@@ -29,7 +29,15 @@ func main() {
 	var err error
 	defer logOutput.Close()
 	defer panicRecover()
-	pool, err = pgxpool.New(context.Background(), postgreConnString)
+	config, err := pgxpool.ParseConfig(postgreConnString)
+	if err != nil {
+		log.Error("Failed to parse config", "error", err)
+		return
+	}
+	config.ConnConfig.Tracer = &AppQueryTracer{}
+	//	config.ConnConfig.Tracer. = &pgx.QueryTracer{}
+
+	pool, err = pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		log.Error("Unable to connect to database", "error", err)
 		panic(err)

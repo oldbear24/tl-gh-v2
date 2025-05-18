@@ -1,6 +1,6 @@
 CREATE TABLE players (
     id BIGINT,   
-    guild BIGINT REFERENCES guilds (id),
+    guild BIGINT REFERENCES guilds (id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     guild_nick VARCHAR(255),    
     combat_power integer DEFAULT 0,      
@@ -11,4 +11,3 @@ CREATE TABLE players (
     active boolean  DEFAULT TRUE,
     PRIMARY KEY (id,guild)
 );
-

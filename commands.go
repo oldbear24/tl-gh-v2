@@ -4,6 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var serverAdminPermission = int64(discordgo.PermissionAdministrator | discordgo.PermissionManageServer)
 var commands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "ping",
@@ -22,7 +23,7 @@ var commands = []*discordgo.ApplicationCommand{
 				Name:        "create",
 				Description: "Create an event",
 			},
-			{
+			/*{
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
 				Name:        "delete",
 				Description: "Delete an event",
@@ -31,12 +32,12 @@ var commands = []*discordgo.ApplicationCommand{
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
 				Name:        "list",
 				Description: "List all events",
-			},
+			},*/
 		},
 	},
 	{
-		Name:        "dkp-export",
-		Type:        discordgo.UserApplicationCommand,
+		Name: "dkp-export",
+		Type: discordgo.UserApplicationCommand,
 	},
 	{
 		Name:        "gear",
@@ -47,6 +48,47 @@ var commands = []*discordgo.ApplicationCommand{
 				Name:        "user",
 				Description: "User to check",
 				Required:    false,
+			},
+		},
+	},
+	{
+		Name:        "notifications",
+		Description: "Enable or disable notifications",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "type",
+				Description: "Type of notification",
+				Required:    true,
+				Choices: []*discordgo.ApplicationCommandOptionChoice{
+					{
+						Name:  "auction",
+						Value: "auction",
+					},
+					{
+						Name:  "event",
+						Value: "event",
+					},
+				},
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionBoolean,
+				Name:        "enable",
+				Description: "Enable or disable notifications",
+				Required:    true,
+			},
+		},
+	},
+	{
+		Name:                     "generate-auth",
+		Description:              "Generate an auth credentials",
+		DefaultMemberPermissions: &serverAdminPermission,
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "guild-id",
+				Description: "Guild ID",
+				Required:    true,
 			},
 		},
 	},

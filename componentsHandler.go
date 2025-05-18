@@ -79,6 +79,7 @@ var componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.Inte
 			},
 		})
 	},
+	
 }
 
 func setWeapon(s *discordgo.Session, i *discordgo.InteractionCreate, weapon string) {

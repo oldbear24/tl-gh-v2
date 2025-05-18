@@ -5,42 +5,52 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jackc/pgx/v5"
 )
 
-func eventEmbed() *discordgo.InteractionResponse {
-	return &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Flags: discordgo.MessageFlagsEphemeral,
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       "Event created",
-					Description: "Event created successfully",
-					Fields: []*discordgo.MessageEmbedField{
-						{
-							Name:   "Start",
-							Value:  "2021-09-01",
-							Inline: true,
-						},
-					},
-				},
+func eventEmbed(conn *pgx.Conn, id int) (*discordgo.MessageEmbed, error) {
+	row := conn.QueryRow(context.Background(), "SELECT name,description,date FROM events where id=$1", id)
+	var name string
+	var description string
+	var date time.Time
+	err := row.Scan(&name, &description, &date)
+	if err != nil {
+		return nil, err
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title:       name,
+		Description: description,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Start",
+				Value:  date.Format(time.Layout),
+				Inline: false,
 			},
-			Components: []discordgo.MessageComponent{
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.Button{
-							Label:    "Delete",
-							Style:    discordgo.DangerButton,
-							CustomID: "delete_event",
-						},
-					},
-				},
+			{
+				Name:   "Tank",
+				Value:  "",
+				Inline: true,
+			},
+			{
+				Name:   "DPS",
+				Value:  "",
+				Inline: true,
+			},
+			{
+				Name:   "Healer",
+				Value:  "",
+				Inline: true,
 			},
 		},
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: fmt.Sprintf("ID: %d", id),
+		},
 	}
+	return embed, nil
 
 }
 

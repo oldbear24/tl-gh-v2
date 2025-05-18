@@ -4,32 +4,40 @@ import (
 	"context"
 	"log/slog"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
-type AppLogger struct {
-	*slog.Logger
+func LogDebugDuration(msg string, attrs ...any) func() {
+	return LogDuration(slog.LevelDebug, msg, attrs...)
 }
-
-func (logger *AppLogger) DebugDuration(msg string, attrs ...any) func() {
-	return logger.LogDuration(slog.LevelDebug, msg, attrs...)
+func LogInfoDuration(msg string, attrs ...any) func() {
+	return LogDuration(slog.LevelInfo, msg, attrs...)
 }
-func (logger *AppLogger) InfoDuration(msg string, attrs ...any) func() {
-	return logger.LogDuration(slog.LevelInfo, msg, attrs...)
+func LogWarnDuration(msg string, attrs ...any) func() {
+	return LogDuration(slog.LevelWarn, msg, attrs...)
 }
-func (logger *AppLogger) WarnDuration(msg string, attrs ...any) func() {
-	return logger.LogDuration(slog.LevelWarn, msg, attrs...)
+func LogErrorDuration(msg string, attrs ...any) func() {
+	return LogDuration(slog.LevelError, msg, attrs...)
 }
-func (logger *AppLogger) ErrorDuration(msg string, attrs ...any) func() {
-	return logger.LogDuration(slog.LevelError, msg, attrs...)
-}
-func (logger *AppLogger) LogDuration(level slog.Level, msg string, attrs ...any) func() {
-	if level == slog.LevelDebug {
-		return func() {}
-	}
+func LogDuration(level slog.Level, msg string, attrs ...any) func() {
 	start := time.Now()
 	return func() {
 		elapsed := time.Since(start)
 		all := append(attrs, slog.Duration("duration", elapsed))
-		logger.Log(context.Background(), level, msg, all...)
+		log.Log(context.Background(), level, msg, all...)
 	}
+
+}
+
+type AppQueryTracer struct {
+	pgx.QueryTracer
+}
+
+func (qt *AppQueryTracer) TraceQueryStart(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
+	log.Debug("Query started", "query", data.SQL, "args", data.Args)
+	return ctx
+}
+
+func (qt *AppQueryTracer) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryEndData) {
 }

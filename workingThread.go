@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/jackc/pgx/v5"
 )
 
 func startWorkingThread(s *discordgo.Session) {
@@ -16,6 +17,9 @@ func workingThread(s *discordgo.Session) {
 	for range time.Tick(time.Second) {
 		if checkIfTaskShouldBeRun("syncMembers", workingThreadTimers, time.Hour) {
 			go syncMembers(s)
+		}
+		if checkIfTaskShouldBeRun("proccesNotifications", workingThreadTimers, time.Second*30) {
+			go proccesNotifications(s)
 		}
 	}
 
@@ -83,4 +87,58 @@ func syncMembers(s *discordgo.Session) {
 		}
 		tx.Commit(context.Background())
 	}
+}
+
+func proccesNotifications(s *discordgo.Session) {
+	conn, err := pool.Acquire(context.Background())
+	if err != nil {
+		log.Error("Failed to obtain connection from pool", "error", err)
+		return
+	}
+	defer conn.Release()
+	tx, err := conn.BeginTx(context.Background(), pgx.TxOptions{
+		IsoLevel: pgx.Serializable,
+	})
+	if err != nil {
+		log.Error("Could not open transaction", "error", err)
+		return
+	}
+	defer tx.Rollback(context.Background())
+	rows, err := tx.Query(context.Background(), "select id,player_id,notification_text from notification_queue FOR UPDATE")
+	if err != nil {
+		log.Error("Could not retrieve notifications from database", "error", err)
+		return
+	}
+	idsToDelete := []int{}
+
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+		var playerId string
+		var notificationText string
+		err := rows.Scan(&id, &playerId, &notificationText)
+		if err != nil {
+			log.Error("Could not get notification from db row", "error", err)
+			continue
+		}
+		idsToDelete = append(idsToDelete, id)
+
+		channel, err := s.UserChannelCreate(playerId)
+		if err != nil {
+			log.Error("Could not create user channel", "error", err)
+			continue
+		}
+		_, err = s.ChannelMessageSend(channel.ID, notificationText)
+		if err != nil {
+			log.Error("Could not send notification", "error", err)
+			continue
+		}
+		log.Debug("Sent notification", "userId", playerId, "notificationText", notificationText)
+	}
+	_, err = tx.Exec(context.Background(), "delete from notification_queue where id = ANY($1)", idsToDelete)
+	if err != nil {
+		log.Error("Could not delete notification from db", "error", err)
+		return
+	}
+	tx.Commit(context.Background())
 }
