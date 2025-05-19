@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
 )
 
-func UpdateGuildRecord(g *discordgo.Guild) {
+func UpdateGuildRecord(g discord.GatewayGuild) {
 	conn, err := pool.Acquire(context.Background())
 	if err != nil {
 		log.Error("Unable to acquire connection", "error", err)

@@ -11,7 +11,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo"
+	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/gateway"
 	"github.com/jackc/pgx/v5/pgxpool"
 	logoutput "github.com/oldbear24/tl-gh-v2/internal/logOutput"
 	pgmigrations "github.com/oldbear24/tl-gh-v2/internal/pgMigrations"
@@ -20,9 +22,9 @@ import (
 var log *slog.Logger
 var botToken string
 var postgreConnString string
-var s *discordgo.Session
 var pool *pgxpool.Pool
 var logOutput *logoutput.LogOutput
+var client *bot.Client
 
 func main() {
 	initApp()
@@ -50,57 +52,37 @@ func main() {
 	}
 	pgmigrations.RunMigrations(mConn.Conn())
 	mConn.Release()
-	s, err = discordgo.New("Bot " + botToken)
+
+	client, err = disgo.New(botToken,
+		// set gateway options
+		bot.WithGatewayConfigOpts(
+			// set enabled intents
+			gateway.WithIntents(
+				gateway.IntentGuilds,
+				gateway.IntentGuildMessages,
+				gateway.IntentDirectMessages,
+			),
+		),
+		bot.WithEventListenerFunc(commandListener),
+		bot.WithEventListeners(registerEventListener()),
+		// add event listeners
+	)
 	log.Info("Bot is starting...") // Log when the bot starts
 	if err != nil {
 		log.Error("error creating Discord session,", "error", err)
 		panic(err)
 	}
-	s.Identify.Intents = discordgo.IntentsAll
-	registerHooks(s)
+	defer client.Close(context.TODO())
+	registerHooks(client)
 	// Open a websocket connection to Discord and begin listening.
-	err = s.Open()
-	if err != nil {
-		log.Error("error opening connection,", "error", err)
-		panic(err)
+	if _, err = client.Rest.SetGlobalCommands(client.ApplicationID, commands); err != nil {
+		slog.Error("error while registering commands", slog.Any("err", err))
 	}
-	defer s.Close()
-	log.Info("Adding commands...")
-	registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
-	for i, v := range commands {
-		cmd, err := s.ApplicationCommandCreate(s.State.User.ID, "", v)
-		if err != nil {
-			log.Error("Cannot create command,", "error", err, "command", v.Name)
-			panic(err)
-		}
-		log.Info("Registered command", "command", cmd.Name)
-		registeredCommands[i] = cmd
+	if err = client.OpenGateway(context.TODO()); err != nil {
+		slog.Error("errors while connecting to gateway", slog.Any("err", err))
+		return
 	}
-
-	// Delete unused commands
-	existingCommands, err := s.ApplicationCommands(s.State.User.ID, "")
-	if err != nil {
-		log.Error("Cannot fetch existing commands,", "error", err)
-		panic(err)
-	}
-	for _, cmd := range existingCommands {
-		found := false
-		for _, regCmd := range registeredCommands {
-			if cmd.ID == regCmd.ID {
-				found = true
-				break
-			}
-		}
-		if !found {
-			err := s.ApplicationCommandDelete(s.State.User.ID, "", cmd.ID)
-			if err != nil {
-				log.Error("Cannot delete command,", "error", err, "command", cmd.Name)
-				panic(err)
-			}
-			log.Info("Deleted unused command", "command", cmd.Name)
-		}
-	}
-	startWorkingThread(s)
+	startWorkingThread(client)
 	// Wait here until CTRL-C or other term signal is received.
 	log.Info("Bot is now running.  Press CTRL-C to exit.") // Log when the bot is running
 	sc := make(chan os.Signal, 1)

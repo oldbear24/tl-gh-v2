@@ -1,12 +1,6 @@
 package main
 
-import (
-	"context"
-	"fmt"
-
-	"github.com/bwmarrin/discordgo"
-)
-
+/*
 var componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 	"set_role": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		roleString := i.MessageComponentData().Values[0]
@@ -79,7 +73,7 @@ var componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.Inte
 			},
 		})
 	},
-	
+
 }
 
 func setWeapon(s *discordgo.Session, i *discordgo.InteractionCreate, weapon string) {
@@ -104,3 +98,4 @@ func setWeapon(s *discordgo.Session, i *discordgo.InteractionCreate, weapon stri
 		return
 	}
 }
+*/

@@ -4,22 +4,24 @@ import (
 	"context"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/snowflake/v2"
 	"github.com/jackc/pgx/v5"
 )
 
-func startWorkingThread(s *discordgo.Session) {
-	go workingThread(s)
+func startWorkingThread(c *bot.Client) {
+	go workingThread(c)
 }
 
-func workingThread(s *discordgo.Session) {
+func workingThread(c *bot.Client) {
 	workingThreadTimers := make(map[string]time.Time)
 	for range time.Tick(time.Second) {
 		if checkIfTaskShouldBeRun("syncMembers", workingThreadTimers, time.Hour) {
-			go syncMembers(s)
+			go syncMembers(c)
 		}
 		if checkIfTaskShouldBeRun("proccesNotifications", workingThreadTimers, time.Second*30) {
-			go proccesNotifications(s)
+			go proccesNotifications(c)
 		}
 	}
 
@@ -34,7 +36,9 @@ func checkIfTaskShouldBeRun(command string, timers map[string]time.Time, runEver
 	}
 	return false
 }
-func syncMembers(s *discordgo.Session) {
+
+func syncMembers(c *bot.Client) {
+	s := *c
 	conn, err := pool.Acquire(context.Background())
 	if err != nil {
 		log.Error("", "error", err)
@@ -47,13 +51,13 @@ func syncMembers(s *discordgo.Session) {
 		return
 	}
 	for guildRows.Next() {
-		var id string
+		var id int64
 		err := guildRows.Scan(&id)
 		if err != nil {
 			log.Error("Could not get guildId from db row", "error", err)
 			continue
 		}
-		var after string
+		var after snowflake.ID
 
 		tx, err := pool.Begin(context.Background())
 		if err != nil {
@@ -67,7 +71,8 @@ func syncMembers(s *discordgo.Session) {
 		}
 		defer tx.Rollback(context.Background())
 		for {
-			members, err := s.GuildMembers(id, after, 100)
+
+			members, err := s.Rest.GetMembers(snowflake.ID(id), 100, after)
 			if err != nil {
 				log.Error("Could not retrieve guild members", "error", err)
 				break
@@ -89,7 +94,8 @@ func syncMembers(s *discordgo.Session) {
 	}
 }
 
-func proccesNotifications(s *discordgo.Session) {
+func proccesNotifications(c *bot.Client) {
+	s := *c
 	conn, err := pool.Acquire(context.Background())
 	if err != nil {
 		log.Error("Failed to obtain connection from pool", "error", err)
@@ -114,7 +120,7 @@ func proccesNotifications(s *discordgo.Session) {
 	defer rows.Close()
 	for rows.Next() {
 		var id int
-		var playerId string
+		var playerId int64
 		var notificationText string
 		err := rows.Scan(&id, &playerId, &notificationText)
 		if err != nil {
@@ -123,12 +129,12 @@ func proccesNotifications(s *discordgo.Session) {
 		}
 		idsToDelete = append(idsToDelete, id)
 
-		channel, err := s.UserChannelCreate(playerId)
+		channel, err := s.Rest.CreateDMChannel(snowflake.ID(playerId))
 		if err != nil {
 			log.Error("Could not create user channel", "error", err)
 			continue
 		}
-		_, err = s.ChannelMessageSend(channel.ID, notificationText)
+		_, err = s.Rest.CreateMessage(channel.ID(), discord.NewMessageCreateBuilder().SetContent(notificationText).Build())
 		if err != nil {
 			log.Error("Could not send notification", "error", err)
 			continue

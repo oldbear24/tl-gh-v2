@@ -1,66 +1,51 @@
 package main
 
-import (
-	"github.com/bwmarrin/discordgo"
-)
+import "github.com/disgoorg/disgo/discord"
 
-var serverAdminPermission = int64(discordgo.PermissionAdministrator | discordgo.PermissionManageServer)
-var commands = []*discordgo.ApplicationCommand{
-	{
+// var serverAdminPermission = int64(discordgo.PermissionAdministrator | discordgo.PermissionManageServer)
+var commands = []discord.ApplicationCommandCreate{
+
+	discord.SlashCommandCreate{
 		Name:        "ping",
 		Description: "Sends a pong message",
 	},
-	{
+	discord.SlashCommandCreate{
 		Name:        "roll",
 		Description: "Rolls a dice",
 	},
-	{
+	discord.SlashCommandCreate{
 		Name:        "events",
 		Description: "Events",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
+		Options: []discord.ApplicationCommandOption{
+			discord.ApplicationCommandOptionSubCommand{
 				Name:        "create",
 				Description: "Create an event",
 			},
-			/*{
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Name:        "delete",
-				Description: "Delete an event",
-			},
-			{
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Name:        "list",
-				Description: "List all events",
-			},*/
 		},
 	},
-	{
+	discord.UserCommandCreate{
 		Name: "dkp-export",
-		Type: discordgo.UserApplicationCommand,
 	},
-	{
+	discord.SlashCommandCreate{
 		Name:        "gear",
 		Description: "Check your gear and CP",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        discordgo.ApplicationCommandOptionUser,
+		Options: []discord.ApplicationCommandOption{
+			discord.ApplicationCommandOptionUser{
 				Name:        "user",
 				Description: "User to check",
 				Required:    false,
 			},
 		},
 	},
-	{
+	discord.SlashCommandCreate{
 		Name:        "notifications",
 		Description: "Enable or disable notifications",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        discordgo.ApplicationCommandOptionString,
+		Options: []discord.ApplicationCommandOption{
+			discord.ApplicationCommandOptionString{
 				Name:        "type",
 				Description: "Type of notification",
 				Required:    true,
-				Choices: []*discordgo.ApplicationCommandOptionChoice{
+				Choices: []discord.ApplicationCommandOptionChoiceString{
 					{
 						Name:  "auction",
 						Value: "auction",
@@ -71,21 +56,15 @@ var commands = []*discordgo.ApplicationCommand{
 					},
 				},
 			},
-			{
-				Type:        discordgo.ApplicationCommandOptionBoolean,
-				Name:        "enable",
-				Description: "Enable or disable notifications",
-				Required:    true,
-			},
 		},
 	},
-	{
-		Name:                     "generate-auth",
-		Description:              "Generate an auth credentials",
-		DefaultMemberPermissions: &serverAdminPermission,
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        discordgo.ApplicationCommandOptionString,
+	discord.SlashCommandCreate{
+
+		Name:        "generate-auth",
+		Description: "Generate an auth credentials",
+		//TODO: add perms
+		Options: []discord.ApplicationCommandOption{
+			discord.ApplicationCommandOptionString{
 				Name:        "guild-id",
 				Description: "Guild ID",
 				Required:    true,

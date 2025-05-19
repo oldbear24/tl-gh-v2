@@ -3,22 +3,22 @@ package main
 import (
 	"context"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
 	"github.com/jackc/pgx/v5"
 )
 
-func CreateOrUpdateMember(conn *pgx.Conn, m *discordgo.Member, guildId string) error {
-	_, err := conn.Exec(context.Background(), `INSERT INTO players (id, name, guild, guild_nick, active) 
+func CreateOrUpdateMember(conn *pgx.Conn, m discord.Member, guildId int64) error {
+	_, err := conn.Exec(context.Background(), `INSERT INTO players (id, name, guild, guild_nick, active)
 VALUES ($1, $2, $3, $4, true)
-ON CONFLICT (id, guild) DO UPDATE 
-  SET name = EXCLUDED.name, 
+ON CONFLICT (id, guild) DO UPDATE
+  SET name = EXCLUDED.name,
       guild_nick = EXCLUDED.guild_nick,
       active = EXCLUDED.active;
 `, m.User.ID, m.User.Username, guildId, m.Nick)
 	return err
 }
 
-func SetMemberInactive(m *discordgo.Member, guildId string) {
+func SetMemberInactive(m discord.Member, guildId int64) {
 	conn, err := pool.Acquire(context.Background())
 	if err != nil {
 		log.Error("Could not acquire db connection from pool", "error", err)
@@ -31,6 +31,8 @@ func SetMemberInactive(m *discordgo.Member, guildId string) {
 		return
 	}
 }
+
+/*
 func GetMemberAvatarUrl(m *discordgo.Member, guildId string, size string) string {
 	m.AvatarURL("")
 	if m.Avatar != "" {
@@ -47,3 +49,4 @@ func GetMemberAvatarUrl(m *discordgo.Member, guildId string, size string) string
 func GetMemberAvatarUrlWithDefaultSize(m *discordgo.Member, guildId string) string {
 	return GetMemberAvatarUrl(m, guildId, "")
 }
+*/

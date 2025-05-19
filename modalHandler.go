@@ -1,12 +1,6 @@
 package main
 
-import (
-	"context"
-	"strconv"
-
-	"github.com/bwmarrin/discordgo"
-)
-
+/*
 var modalHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 	"set_cp_modal": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		data := i.ModalSubmitData()
@@ -107,3 +101,4 @@ var modalHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interacti
 		tx.Commit(context.Background())
 	},
 }
+*/
