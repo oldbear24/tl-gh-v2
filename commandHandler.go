@@ -1,13 +1,13 @@
 package main
 
 import (
-	"context"
+	"bytes"
 	"fmt"
 	"log/slog"
+	"text/tabwriter"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
-	"github.com/disgoorg/snowflake/v2"
 )
 
 func commandListener(event *events.ApplicationCommandInteractionCreate) {
@@ -244,7 +244,39 @@ var cmdHandler = map[string]func(event *events.ApplicationCommandInteractionCrea
 		}
 	},
 	"gear": func(event *events.ApplicationCommandInteractionCreate) {
-		event.DeferCreateMessage(true)
+		flags := discord.MessageFlagIsComponentsV2
+
+		//flags = flags.Add(discord.MessageFlagEphemeral)
+
+		var buf bytes.Buffer
+
+		w := tabwriter.NewWriter(&buf, 0, 0, 3, ' ', 0) // 5 spaces between columns
+		fmt.Fprintln(w, "Column1\tColumn2\tColumn3")
+		for i := 0; i < 5; i++ {
+			fmt.Fprintln(w, randomString(15)+"\t"+randomString(15)+"\t"+randomString(15))
+
+		}
+
+		w.Flush()
+		bufString := buf.String()
+		if err := event.CreateMessage(discord.MessageCreate{
+			Flags: flags,
+			Components: []discord.LayoutComponent{
+				discord.NewContainer(
+					discord.NewSection(
+						discord.NewTextDisplay("**Name: [Seeing Red](https://open.spotify.com/track/65qBr6ToDUjTD1RiE1H4Gl)**"),
+						discord.NewTextDisplay(bufString),
+						discord.NewTextDisplay("**Album:  [The Sky, The Earth & All Between](https://open.spotify.com/album/2W82VyyIFAXigJEiLm5TT1)**"),
+					),
+					discord.NewTextDisplay("`0:08`/`3:40`"),
+					discord.NewTextDisplay("[🔘▬▬▬▬▬▬▬▬▬]"),
+					discord.NewSmallSeparator(),
+				),
+			},
+		}); err != nil {
+			slog.Error("error while sending message", slog.Any("err", err))
+		}
+		/*event.DeferCreateMessage(true)
 
 		var memberID snowflake.ID
 		if optionMember, ok := event.SlashCommandInteractionData().Options["user"]; ok {
@@ -263,9 +295,14 @@ var cmdHandler = map[string]func(event *events.ApplicationCommandInteractionCrea
 			return
 		}
 		defer conn.Release()
+		_, err = client.Rest.UpdateInteractionResponse(event.ApplicationID(), event.Token(), gearMessage(conn.Conn(), event, member))
 
+		if err != nil {
+			log.Error("Could not edit interaction message", "error", err)
+			return
+		}
 		log.Info("Sent gear embed", "user", member.User.ID, "guild", *event.GuildID())
-
+		*/
 	},
 }
 

@@ -4,10 +4,10 @@ go 1.24
 
 require (
 	github.com/bwmarrin/discordgo v0.28.1
-	github.com/disgoorg/disgo v0.18.17-0.20250518002213-750617a899bc
+	github.com/disgoorg/disgo v0.18.17-0.20250523015103-a87bbab7765b
+	github.com/disgoorg/snowflake/v2 v2.0.3
 	github.com/jackc/pgx/v5 v5.7.4
 	golang.org/x/crypto v0.38.0
-	github.com/disgoorg/snowflake/v2 v2.0.3
 
 )
 

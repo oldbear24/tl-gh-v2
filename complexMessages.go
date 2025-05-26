@@ -1,7 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"context"
+	"database/sql"
+	"fmt"
+	"text/tabwriter"
+
+	"github.com/bwmarrin/discordgo"
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -190,6 +198,96 @@ import (
 		}
 	}
 */
-func gearMessage(conn *pgx.Conn, member *discord.Member) {
+func gearMessage(conn *pgx.Conn, event *events.ApplicationCommandInteractionCreate, member *discord.Member) discord.MessageUpdate {
+	var cp int
+	var role sql.NullInt32
+	var weapon1 sql.NullInt32
+	var weapon2 sql.NullInt32
+	var buildUrl sql.NullString
+	guildId := *event.GuildID()
+	userId := event.Member().User.ID
 
+	weapons := []discordgo.SelectMenuOption{}
+	roles := []discordgo.SelectMenuOption{}
+	weaponCacheData := weaponsData.GetAllWeapons()
+	rolesCacheData := rolesData.GetAllRoles()
+	for _, v := range *weaponCacheData {
+		weapons = append(weapons, discordgo.SelectMenuOption{Value: v.Name, Label: v.VisibleName, Emoji: &discordgo.ComponentEmoji{ID: v.Emote}})
+
+	}
+	for _, v := range *rolesCacheData {
+		roles = append(roles, discordgo.SelectMenuOption{Value: v.Name, Label: v.VisibleName, Emoji: &discordgo.ComponentEmoji{ID: v.Emote}})
+	}
+
+	err := conn.QueryRow(context.Background(), `select combat_power,role,weapon_1,weapon_2, build_url from players where guild=$1 and id=$2`, guildId, userId).Scan(&cp, &role, &weapon1, &weapon2, &buildUrl)
+
+	if err != nil {
+		log.Error("Could not get user stats", "error", err)
+	}
+	weapon1Field := ""
+	weapon2Field := ""
+	buildUrlField := ""
+	roleField := ""
+	if role.Valid {
+		if roleData := rolesData.GetRole(int(role.Int32)); roleData.Name != "" {
+			roleField = fmt.Sprintf("<:%s:%s> %s", roleData.Name, roleData.Emote, roleData.VisibleName)
+		}
+	}
+	if buildUrl.Valid {
+		buildUrlField = fmt.Sprintf("[Here](%s)", buildUrl.String)
+	} else {
+		buildUrlField = "Not set"
+	}
+
+	if weapon1.Valid {
+
+		if weapon1Data := weaponsData.GetWeapon(int(weapon1.Int32)); weapon1Data.Name != "" {
+			weapon1Field = fmt.Sprintf("<:%s:%s> %s", weapon1Data.Name, weapon1Data.Emote, weapon1Data.VisibleName)
+		}
+
+	}
+	if weapon2.Valid {
+		if weapon2Data := weaponsData.GetWeapon(int(weapon2.Int32)); weapon2Data.Name != "" {
+			weapon2Field = fmt.Sprintf("<:%s:%s> %s", weapon2Data.Name, weapon2Data.Emote, weapon2Data.VisibleName)
+		}
+
+	}
+	flags := discord.MessageFlagIsComponentsV2
+
+	flags = flags.Add(discord.MessageFlagEphemeral)
+
+	var buf bytes.Buffer
+
+	w := tabwriter.NewWriter(&buf, 0, 0, 3, ' ', 0) // 5 spaces between columns
+	fmt.Fprintln(w, "Column1\tColumn2\tColumn3")
+	for i := 0; i < 5; i++ {
+		fmt.Fprintln(w, randomString(15)+"\t"+randomString(15)+"\t"+randomString(15))
+
+	}
+
+	w.Flush()
+	bufString := buf.String()
+	println(bufString)
+
+	/*data := [][]string{
+		{"Column1", "Column2", "Column3"},
+		{"Aa", "Ba", "Ca"},
+		{"1a", "2a", "3a"},
+		{"Hello", "World", "Go"},
+	}*/
+	//tab := prepareTable(data)
+	message := discord.MessageUpdate{
+		Flags: &flags,
+		Components: &[]discord.LayoutComponent{
+			discord.NewContainer(
+				discord.NewSection(
+					discord.NewTextDisplay(fmt.Sprintf("# %s", member.EffectiveName())),
+					discord.NewTextDisplay(bufString),
+				),
+			),
+		},
+	}
+
+	log.Error("Message", "weapons", weapon1Field, "weapon2", weapon2Field, "role", roleField, "buildUrl", buildUrlField)
+	return message
 }

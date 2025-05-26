@@ -1,32 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"math/rand/v2"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func rollDice() int {
 	return rand.IntN(99) + 1
-}
-
-func getMemberGuildNick(m *discordgo.Member) string {
-	name := m.DisplayName()
-	if name == "" {
-		name = m.User.Username
-	}
-	return name
-}
-
-func GetOptions(options []*discordgo.ApplicationCommandInteractionDataOption) map[string]*discordgo.ApplicationCommandInteractionDataOption {
-	optionMap := make(map[string]*discordgo.ApplicationCommandInteractionDataOption, len(options))
-	for _, opt := range options {
-		optionMap[opt.Name] = opt
-	}
-	return optionMap
 }
 
 func generatePasswordAndHash() (string, string, error) {
@@ -57,4 +41,31 @@ func parseDateTime(dateStr, timeStr string) (time.Time, error) {
 	// Define layout according to the format of combined string
 	layout := "02-01-2006 15:04"
 	return time.ParseInLocation(layout, combined, loc)
+}
+
+func prepareTable(data [][]string) string {
+
+	// Find longest text per column
+	colWidths := make([]int, len(data[0]))
+	for _, row := range data {
+		for i, cell := range row {
+			if len(cell) > colWidths[i] {
+				colWidths[i] = len(cell)
+			}
+		}
+	}
+
+	// Write to buffer
+	var buf bytes.Buffer
+	for _, row := range data {
+		for i, cell := range row {
+			format := fmt.Sprintf("%%-%ds", colWidths[i]+5) // longest cell + 5 spaces
+			buf.WriteString(fmt.Sprintf(format, cell))
+		}
+		buf.WriteByte('\n')
+	}
+
+	result := buf.String()
+	return result
+
 }
