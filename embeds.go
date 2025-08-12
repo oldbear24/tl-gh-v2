@@ -57,11 +57,12 @@ WHERE event=$1`, id)
 				}
 				guildNick = fmt.Sprintf("%s%s%s", wep1Em, wep2Em, guildNick)
 				roleData := rolesData.GetRole(int(role.Int32))
-				if roleData.Name == "tank" {
+				switch roleData.Name {
+				case "tank":
 					tanks += guildNick + "\n"
-				} else if roleData.Name == "dps" {
+				case "dps":
 					dps += guildNick + "\n"
-				} else if roleData.Name == "healer" {
+				case "healer":
 					healers += guildNick + "\n"
 				}
 			} else {
@@ -85,7 +86,7 @@ WHERE event=$1`, id)
 				Inline: false,
 			},
 			{
-				Name:   fmt.Sprintf("Tank:"),
+				Name:   "Tank:",
 				Value:  tanks,
 				Inline: true,
 			},

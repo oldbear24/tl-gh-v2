@@ -13,7 +13,8 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jackc/pgx/v5/pgxpool"
-	logoutput "github.com/oldbear24/tl-gh-v2/internal/logOutput"
+
+	logoutput "github.com/oldbear24/openobserve-go-slog-writer"
 	pgmigrations "github.com/oldbear24/tl-gh-v2/internal/pgMigrations"
 )
 

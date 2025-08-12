@@ -125,7 +125,7 @@ func setEventParcitipation(s *discordgo.Session, i *discordgo.InteractionCreate,
 	defer conn.Release()
 	var eventId int
 	var state string
-	conn.QueryRow(context.Background(), `select id,state from events where guild=$1 and message_id=$2`, i.GuildID, eventMessageId).Scan(&eventId, &state)
+	err=conn.QueryRow(context.Background(), `select id,state from events where guild=$1 and message_id=$2`, i.GuildID, eventMessageId).Scan(&eventId, &state)
 	if err != nil {
 		log.Error("Could not get event id", "error", err)
 		return
