@@ -13,7 +13,7 @@ var componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.Inte
 		roleId := rolesData.GetRoleByName(roleString).Id
 		conn, err := pool.Acquire(context.Background())
 		if err != nil {
-			log.Error("Could not aquire db connection from pool", "error", err)
+			log.Error("Could not acquire db connection from pool", "error", err)
 			return
 		}
 		defer conn.Release()
@@ -79,7 +79,6 @@ var componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.Inte
 			},
 		})
 	},
-	
 }
 
 func setWeapon(s *discordgo.Session, i *discordgo.InteractionCreate, weapon string) {
@@ -87,7 +86,7 @@ func setWeapon(s *discordgo.Session, i *discordgo.InteractionCreate, weapon stri
 	wepId := weaponsData.GetWeaponByName(weaponString).Id
 	conn, err := pool.Acquire(context.Background())
 	if err != nil {
-		log.Error("Could not aquire db connection from pool", "error", err)
+		log.Error("Could not acquire db connection from pool", "error", err)
 		return
 	}
 	defer conn.Release()

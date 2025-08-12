@@ -62,7 +62,7 @@ var modalHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interacti
 		conn, err := pool.Acquire(context.Background())
 
 		if err != nil {
-			log.Error("Cannot aquire DB connection", "error", err)
+			log.Error("Cannot acquire DB connection", "error", err)
 			return
 		}
 		startDate, err := parseDateTime(date, time)
