@@ -72,7 +72,7 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 			Data: &discordgo.InteractionResponseData{Flags: discordgo.MessageFlagsEphemeral}})
 		conn, err := pool.Acquire(context.Background())
 		if err != nil {
-			log.Error("Could not aquire db connection from pool", "error", err)
+			log.Error("Could not acquire db connection from pool", "error", err)
 			return
 		}
 		defer conn.Release()
@@ -166,7 +166,7 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 		}
 		conn, err := pool.Acquire(context.Background())
 		if err != nil {
-			log.Error("Could not aquire db connection from pool", "error", err)
+			log.Error("Could not acquire db connection from pool", "error", err)
 			return
 		}
 		defer conn.Release()
@@ -212,7 +212,7 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 		opt := GetOptions(i.ApplicationCommandData().Options)
 		conn, err := pool.Acquire(context.Background())
 		if err != nil {
-			log.Error("Could not aquire db connection from pool", "error", err)
+			log.Error("Could not acquire db connection from pool", "error", err)
 			return
 		}
 		defer conn.Release()
@@ -281,7 +281,7 @@ func createEvent(s *discordgo.Session, i *discordgo.InteractionCreate) {
 							CustomID:    "event_date",
 							Label:       "Event date",
 							Style:       discordgo.TextInputShort,
-							Placeholder: "Enter event date (DD-MM-YYY)",
+							Placeholder: "Enter event date (DD-MM-YYYY)",
 							MinLength:   10,
 							MaxLength:   10,
 							Required:    true,
