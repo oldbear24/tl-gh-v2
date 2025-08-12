@@ -10,7 +10,7 @@ import (
 )
 
 func rollDice() int {
-	return rand.IntN(99) + 1
+	return rand.IntN(100) + 1
 }
 
 func getMemberGuildNick(m *discordgo.Member) string {
