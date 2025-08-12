@@ -4,7 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var serverAdminPermission = int64(discordgo.PermissionAdministrator | discordgo.PermissionManageServer)
+var serverAdminPermission = int64(discordgo.PermissionAdministrator | discordgo.PermissionManageGuild)
 var commands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "ping",
@@ -50,6 +50,10 @@ var commands = []*discordgo.ApplicationCommand{
 				Required:    false,
 			},
 		},
+	},
+	{
+		Name:        "set-gear",
+		Description: "Set your gear and CP",
 	},
 	{
 		Name:        "notifications",

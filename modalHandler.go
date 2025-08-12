@@ -60,7 +60,6 @@ var modalHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interacti
 		date := data.Components[2].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 		time := data.Components[3].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 		conn, err := pool.Acquire(context.Background())
-
 		if err != nil {
 			log.Error("Cannot aquire DB connection", "error", err)
 			return
@@ -92,12 +91,33 @@ var modalHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interacti
 			Embeds: []*discordgo.MessageEmbed{
 				embed,
 			},
+			Components: []discordgo.MessageComponent{
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.Button{
+							Label:    "Join",
+							Style:    discordgo.PrimaryButton,
+							CustomID: "join_event",
+						},
+						discordgo.Button{
+							Label:    "Tentative",
+							Style:    discordgo.SecondaryButton,
+							CustomID: "tentative_event",
+						},
+						discordgo.Button{
+							Label:    "Absence",
+							Style:    discordgo.DangerButton,
+							CustomID: "absence_event",
+						},
+					},
+				},
+			},
 		})
 		if err != nil {
 			log.Error("Could not send message", "error", err)
 			return
 		}
-		_, err = tx.Exec(context.Background(), "update events set messageId = $1 where id=$2", mess.ID, id)
+		_, err = tx.Exec(context.Background(), "update events set message_id = $1 where id=$2", mess.ID, id)
 		if err != nil {
 			log.Error("Could update event", "error", err)
 			s.ChannelMessageDelete(i.ChannelID, mess.ID)

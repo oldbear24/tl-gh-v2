@@ -3,8 +3,8 @@ module github.com/oldbear24/tl-gh-v2
 go 1.24
 
 require (
-	github.com/bwmarrin/discordgo v0.28.1
-	github.com/jackc/pgx/v5 v5.7.4
+	github.com/bwmarrin/discordgo v0.29.0
+	github.com/jackc/pgx/v5 v5.7.5
 	golang.org/x/crypto v0.38.0
 
 )

@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -69,7 +69,7 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 		}
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{Flags: discordgo.MessageFlagsEphemeral}})
+			Data: &discordgo.InteractionResponseData{Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2}})
 		conn, err := pool.Acquire(context.Background())
 		if err != nil {
 			log.Error("Could not aquire db connection from pool", "error", err)
@@ -113,17 +113,39 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 			return
 		}
 
-		reader := strings.NewReader(csvContent)
 		fileNamePart := time.Now().UTC().Format("20060102150405")
+		filename := fmt.Sprintf("%s_dkp_export.csv", fileNamePart)
+		spacing := discordgo.SeparatorSpacingSizeLarge
+		r := bytes.NewReader([]byte(csvContent))
+		color := 48895
+		s.InteractionResponseDelete(i.Interaction)
 		_, err = s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
-			Content: fmt.Sprintf("DKP Export %s", fileNamePart),
+			Flags: discordgo.MessageFlagsIsComponentsV2,
+			Components: []discordgo.MessageComponent{
+				discordgo.Container{
+					AccentColor: &color,
+					Components: []discordgo.MessageComponent{
+						discordgo.TextDisplay{
+							Content: fmt.Sprintf("# DKP Export %s", fileNamePart),
+						},
+						discordgo.Separator{
+							Spacing: &spacing,
+						},
+						discordgo.FileComponent{
+							File: discordgo.UnfurledMediaItem{
+								URL: fmt.Sprintf("attachment://%s", filename),
+							},
+						},
+					},
+				},
+			},
 			Files: []*discordgo.File{
 				{
-					Name:        fmt.Sprintf("%s_dkp_export.csv", fileNamePart),
-					ContentType: "text/csv",
-					Reader:      reader,
+					Name:   filename,
+					Reader: r,
 				},
-			}})
+			},
+		})
 		if err != nil {
 			log.Error("Could not send message", "error", err)
 			return

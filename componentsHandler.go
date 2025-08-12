@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/jackc/pgx/v5"
 )
 
 var componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -52,6 +53,7 @@ var componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.Inte
 		})
 	},
 	"set_weapon_1": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		
 		setWeapon(s, i, "1")
 
 	},
@@ -60,7 +62,7 @@ var componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.Inte
 	},
 	"set_build": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseModal,
+			Type: discordgo.InteractionResponseModal,		
 			Data: &discordgo.InteractionResponseData{
 				CustomID: "set_build_modal",
 				Title:    "Set your build URL",
@@ -79,7 +81,15 @@ var componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.Inte
 			},
 		})
 	},
-	
+	"join_event": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		setEventParcitipation(s, i, "going")
+	},
+	"tentative_event": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		setEventParcitipation(s, i, "tentative")
+	},
+	"absence_event": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		setEventParcitipation(s, i, "not_going")
+	},
 }
 
 func setWeapon(s *discordgo.Session, i *discordgo.InteractionCreate, weapon string) {
@@ -103,4 +113,56 @@ func setWeapon(s *discordgo.Session, i *discordgo.InteractionCreate, weapon stri
 		log.Error("Could not edit interaction message", "error", err)
 		return
 	}
+}
+
+func setEventParcitipation(s *discordgo.Session, i *discordgo.InteractionCreate, status string) {
+	eventMessageId := i.Message.ID
+	conn, err := pool.Acquire(context.Background())
+	if err != nil {
+		log.Error("Could not aquire db connection from pool", "error", err)
+		return
+	}
+	defer conn.Release()
+	var eventId int
+	var state string
+	conn.QueryRow(context.Background(), `select id,state from events where guild=$1 and message_id=$2`, i.GuildID, eventMessageId).Scan(&eventId, &state)
+	if err != nil {
+		log.Error("Could not get event id", "error", err)
+		return
+	}
+	if state != "upcoming" {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "You can only join upcoming events.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+	var roleID int
+	err = conn.QueryRow(context.Background(), `select role from players where guild=$1 and id=$2`, i.GuildID, i.Member.User.ID).Scan(&roleID)
+	if err != nil {
+		log.Error("Could not get user stats", "error", err)
+	}
+	_, err = conn.Exec(context.Background(), `INSERT INTO event_participants(event, player, guild, status)
+VALUES ($1, $2, $3, $4)
+ON CONFLICT (event, player,guild)
+DO UPDATE SET
+    status = EXCLUDED.status
+`, eventId, i.Member.User.ID, i.GuildID, status)
+	if err != nil {
+		log.Error("Could not insert event participant", "error", err)
+		return
+	}
+	updateEventMessage(s, i, conn.Conn(), eventId)
+}
+
+func updateEventMessage(s *discordgo.Session, i *discordgo.InteractionCreate, conn *pgx.Conn, eventId int) error {
+	embed, err := eventEmbed(conn, eventId)
+	if err != nil {
+		log.Error("Could not create event embed", "error", err)
+	}
+	_, err = s.ChannelMessageEditEmbed(i.ChannelID, i.Message.ID, embed)
+	return err
 }

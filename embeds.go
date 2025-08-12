@@ -21,6 +21,60 @@ func eventEmbed(conn *pgx.Conn, id int) (*discordgo.MessageEmbed, error) {
 		return nil, err
 	}
 
+	rows, err := conn.Query(context.Background(), `SELECT ep.status,p."role",p.weapon_1,p.weapon_2,p.guild_nick FROM event_participants ep
+join players p on ep.guild = p.guild and ep.player = p.id 
+WHERE event=$1`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tanks := ""
+	dps := ""
+	healers := ""
+	tentative := ""
+	absent := ""
+	for rows.Next() {
+		var status string
+		var role sql.NullInt32
+		var wep1 sql.NullInt32
+		var wep2 sql.NullInt32
+		var guildNick string
+		err := rows.Scan(&status, &role, &wep1, &wep2, &guildNick)
+		if err != nil {
+			return nil, err
+		}
+		switch status {
+		case "going":
+			if role.Valid {
+				wep1Em := ""
+				wep2Em := ""
+				if wep1.Valid {
+					wep1Em = getWeaponEmote(int(wep1.Int32))
+				}
+				if wep2.Valid {
+					wep2Em = getWeaponEmote(int(wep2.Int32))
+				}
+				guildNick = fmt.Sprintf("%s%s%s", wep1Em, wep2Em, guildNick)
+				roleData := rolesData.GetRole(int(role.Int32))
+				if roleData.Name == "tank" {
+					tanks += guildNick + "\n"
+				} else if roleData.Name == "dps" {
+					dps += guildNick + "\n"
+				} else if roleData.Name == "healer" {
+					healers += guildNick + "\n"
+				}
+			} else {
+				return nil, fmt.Errorf("role is null for participant %s in event %d", guildNick, id)
+			}
+		case "tentative":
+			tentative += guildNick
+		case "not_going":
+			absent += guildNick
+		}
+
+	}
+
 	embed := &discordgo.MessageEmbed{
 		Title:       name,
 		Description: description,
@@ -31,19 +85,29 @@ func eventEmbed(conn *pgx.Conn, id int) (*discordgo.MessageEmbed, error) {
 				Inline: false,
 			},
 			{
-				Name:   "Tank",
-				Value:  "",
+				Name:   fmt.Sprintf("Tank:"),
+				Value:  tanks,
 				Inline: true,
 			},
 			{
 				Name:   "DPS",
-				Value:  "",
+				Value:  dps,
 				Inline: true,
 			},
 			{
 				Name:   "Healer",
-				Value:  "",
+				Value:  healers,
 				Inline: true,
+			},
+			{
+				Name:   "Tentative",
+				Value:  tentative,
+				Inline: false,
+			},
+			{
+				Name:   "Absence",
+				Value:  absent,
+				Inline: false,
 			},
 		},
 		Footer: &discordgo.MessageEmbedFooter{
@@ -193,4 +257,12 @@ func memberGearEmbed(conn *pgx.Conn, i *discordgo.Interaction, member *discordgo
 		},
 		Components: &components,
 	}
+}
+
+func getWeaponEmote(weapon int) string {
+	wepData := weaponsData.GetWeapon(int(weapon))
+	if wepData == nil || wepData.Emote == "" {
+		return ""
+	}
+	return fmt.Sprintf("<:%s:%s>", wepData.Name, wepData.Emote)
 }

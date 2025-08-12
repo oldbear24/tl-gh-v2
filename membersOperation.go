@@ -14,7 +14,7 @@ ON CONFLICT (id, guild) DO UPDATE
   SET name = EXCLUDED.name, 
       guild_nick = EXCLUDED.guild_nick,
       active = EXCLUDED.active;
-`, m.User.ID, m.User.Username, guildId, m.Nick)
+`, m.User.ID, m.User.Username, guildId, m.DisplayName())
 	return err
 }
 
@@ -32,7 +32,6 @@ func SetMemberInactive(m *discordgo.Member, guildId string) {
 	}
 }
 func GetMemberAvatarUrl(m *discordgo.Member, guildId string, size string) string {
-	m.AvatarURL("")
 	if m.Avatar != "" {
 		if member, err := s.GuildMember(guildId, m.User.ID); err != nil {
 			log.Error("Could not get member", "error", err)
@@ -43,6 +42,7 @@ func GetMemberAvatarUrl(m *discordgo.Member, guildId string, size string) string
 	}
 	return m.User.AvatarURL(size)
 }
+
 // GetMemberAvatarUrlWithDefaultSize returns the avatar URL with a default size.
 func GetMemberAvatarUrlWithDefaultSize(m *discordgo.Member, guildId string) string {
 	return GetMemberAvatarUrl(m, guildId, "")

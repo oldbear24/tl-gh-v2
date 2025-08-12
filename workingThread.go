@@ -135,10 +135,12 @@ func proccesNotifications(s *discordgo.Session) {
 		}
 		log.Debug("Sent notification", "userId", playerId, "notificationText", notificationText)
 	}
-	_, err = tx.Exec(context.Background(), "delete from notification_queue where id = ANY($1)", idsToDelete)
-	if err != nil {
-		log.Error("Could not delete notification from db", "error", err)
-		return
+	if len(idsToDelete) > 0 {
+		_, err = tx.Exec(context.Background(), "delete from notification_queue where id = ANY($1)", idsToDelete)
+		if err != nil {
+			log.Error("Could not delete notification from db", "error", err)
+			return
+		}
 	}
 	tx.Commit(context.Background())
 }
