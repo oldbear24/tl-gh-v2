@@ -36,19 +36,19 @@ func registerHooks(s *discordgo.Session) {
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.GuildMemberAdd) {
 		conn, err := pool.Acquire(context.Background())
 		if err != nil {
-			log.Error("Could not aquire db connection from pool", "error", err)
+			log.Error("Could not acquire db connection from pool", "error", err)
 		}
 		defer conn.Release()
 		CreateOrUpdateMember(conn.Conn(), i.Member, i.GuildID)
 
 	})
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.GuildMemberRemove) {
-		SetMemberInactive(i.Member,i.GuildID)
+		SetMemberInactive(i.Member, i.GuildID)
 	})
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.GuildMemberUpdate) {
 		conn, err := pool.Acquire(context.Background())
 		if err != nil {
-			log.Error("Could not aquire db connection from pool", "error", err)
+			log.Error("Could not acquire db connection from pool", "error", err)
 		}
 		defer conn.Release()
 		CreateOrUpdateMember(conn.Conn(), i.Member, i.GuildID)
