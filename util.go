@@ -58,3 +58,15 @@ func parseDateTime(dateStr, timeStr string) (time.Time, error) {
 	layout := "02-01-2006 15:04"
 	return time.ParseInLocation(layout, combined, loc)
 }
+
+func stringPtr(s string) *string {
+	return &s
+}
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}

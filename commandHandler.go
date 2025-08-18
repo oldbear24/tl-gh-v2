@@ -261,7 +261,146 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 			},
 		})
 	},
+	"set_game_roles": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		opt := GetOptions(i.ApplicationCommandData().Options)
+		conn, err := pool.Acquire(context.Background())
+		if err != nil {
+			log.Error("Could not acquire db connection from pool", "error", err)
+			return
+		}
+		defer conn.Release()
+
+		_, err = conn.Exec(context.Background(), `update guilds set game_role=$1, game_leader_role=$2 where id=$3`, opt["role"].RoleValue(s, i.GuildID).ID, opt["leader_role"].RoleValue(s, i.GuildID).ID, i.GuildID)
+		if err != nil {
+			log.Error("Could not update guilds", "error", err)
+			return
+		}
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Flags:   discordgo.MessageFlagsEphemeral,
+				Content: "Game roles updated"}})
+
+	},
+	"add-game-role": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{Flags: discordgo.MessageFlagsEphemeral}})
+		conn, err := pool.Acquire(context.Background())
+		if err != nil {
+			log.Error("Could not acquire db connection from pool", "error", err)
+			return
+		}
+		defer conn.Release()
+		var gameRole string
+		var leaderRole string
+		err = conn.QueryRow(context.Background(), `select game_role, game_leader_role from guilds where id=$1`, i.GuildID).Scan(&gameRole, &leaderRole)
+		if err != nil {
+			log.Error("Could not get game roles", "error", err)
+			return
+		}
+		if gameRole == "" {
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Content: stringPtr("Game role is not set for this server."),
+			})
+			return
+		}
+		if leaderRole == "" {
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Content: stringPtr("Game leader role is not set for this server."),
+			})
+			return
+		}
+
+		if i.ApplicationCommandData().TargetID == "" {
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Content: stringPtr("You need to select a user to add the game role."),
+			})
+			return
+		}
+		if i.Member.Roles == nil || !contains(i.Member.Roles, leaderRole) {
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Content: stringPtr("You need to be a game leader to add game roles."),
+			})
+			return
+		}
+		// Add game role to user
+		err = s.GuildMemberRoleAdd(i.GuildID, i.ApplicationCommandData().
+			TargetID, gameRole)
+		if err != nil {
+			log.Error("Could not add game role", "error", err)
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Content: stringPtr("Could not add game role. Please try again later."),
+			})
+			return
+		}
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Content: stringPtr("Game role added successfully."),
+		})
+
+		log.Info("Added game role", "user", i.ApplicationCommandData().TargetID, "guild", i.GuildID, "role", gameRole)
+	},
+	"remove-game-role": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{Flags: discordgo.MessageFlagsEphemeral}})
+
+		conn, err := pool.Acquire(context.Background())
+		if err != nil {
+			log.Error("Could not acquire db connection from pool", "error", err)
+			return
+		}
+		defer conn.Release()
+		var gameRole string
+		var leaderRole string
+		err = conn.QueryRow(context.Background(), `select game_role, game_leader_role from guilds where id=$1`, i.GuildID).Scan(&gameRole, &leaderRole)
+		if err != nil {
+			log.Error("Could not get game roles", "error", err)
+			return
+		}
+		if gameRole == "" {
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Content: stringPtr("Game role is not set for this server."),
+			})
+			return
+		}
+		if leaderRole == "" {
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Content: stringPtr("Game leader role is not set for this server."),
+			})
+			return
+		}
+		if i.ApplicationCommandData().TargetID == "" {
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Content: stringPtr("You need to select a user to remove the game role."),
+			})
+			return
+		}
+		if i.Member.Roles == nil || !contains(i.Member.Roles, leaderRole) {
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Content: stringPtr("You need to be a game leader to remove game roles."),
+			})
+			return
+		}
+		// Remove game role from user
+		err = s.GuildMemberRoleRemove(i.GuildID, i.ApplicationCommandData().
+			TargetID, gameRole)
+		if err != nil {
+			log.Error("Could not remove game role", "error", err)
+			s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Content: stringPtr("Could not remove game role. Please try again later."),
+			})
+			return
+		}
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Content: stringPtr("Game role removed successfully."),
+		})
+		log.Info("Removed game role", "user", i.Member.User.ID, "guild", i.GuildID, "role", gameRole)
+	},
 }
+
+
 
 func createEvent(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
