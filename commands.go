@@ -51,10 +51,10 @@ var commands = []*discordgo.ApplicationCommand{
 			},
 		},
 	},
-	{
+	/*	{
 		Name:        "set-gear",
 		Description: "Set your gear and CP",
-	},
+	},*/
 	{
 		Name:        "notifications",
 		Description: "Enable or disable notifications",
@@ -92,6 +92,33 @@ var commands = []*discordgo.ApplicationCommand{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "guild-id",
 				Description: "Guild ID",
+				Required:    true,
+			},
+		},
+	},
+	{
+		Name: "add-game-role",
+		Type: discordgo.UserApplicationCommand,
+	},
+	{
+		Name: "remove-game-role",
+		Type: discordgo.UserApplicationCommand,
+	},
+	{
+		Name:        "set_game_roles",
+		Description: "Set game roles for server",
+		DefaultMemberPermissions: &serverAdminPermission,
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Name:        "role",
+				Description: "Role to set",
+				Required:    true,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Name:        "leader_role",
+				Description: "Role to set as leader",
 				Required:    true,
 			},
 		},
