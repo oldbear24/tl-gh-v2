@@ -14,7 +14,7 @@ var commands = []*discordgo.ApplicationCommand{
 		Name:        "roll",
 		Description: "Rolls a dice",
 	},
-	{
+	/*{
 		Name:        "events",
 		Description: "Events",
 		Options: []*discordgo.ApplicationCommandOption{
@@ -23,7 +23,7 @@ var commands = []*discordgo.ApplicationCommand{
 				Name:        "create",
 				Description: "Create an event",
 			},
-			/*{
+			{
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
 				Name:        "delete",
 				Description: "Delete an event",
@@ -32,9 +32,9 @@ var commands = []*discordgo.ApplicationCommand{
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
 				Name:        "list",
 				Description: "List all events",
-			},*/
+			},
 		},
-	},
+	},*/
 	{
 		Name: "dkp-export",
 		Type: discordgo.UserApplicationCommand,
@@ -55,7 +55,7 @@ var commands = []*discordgo.ApplicationCommand{
 		Name:        "set-gear",
 		Description: "Set your gear and CP",
 	},*/
-	{
+	/*{
 		Name:        "notifications",
 		Description: "Enable or disable notifications",
 		Options: []*discordgo.ApplicationCommandOption{
@@ -95,7 +95,7 @@ var commands = []*discordgo.ApplicationCommand{
 				Required:    true,
 			},
 		},
-	},
+	},*/
 	{
 		Name: "add-game-role",
 		Type: discordgo.UserApplicationCommand,

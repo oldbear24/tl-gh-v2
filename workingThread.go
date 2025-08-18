@@ -18,9 +18,9 @@ func workingThread(s *discordgo.Session) {
 		if checkIfTaskShouldBeRun("syncMembers", workingThreadTimers, time.Hour) {
 			go syncMembers(s)
 		}
-		if checkIfTaskShouldBeRun("proccesNotifications", workingThreadTimers, time.Second*30) {
+		/*	if checkIfTaskShouldBeRun("proccesNotifications", workingThreadTimers, time.Second*30) {
 			go proccesNotifications(s)
-		}
+		}*/
 	}
 
 }
