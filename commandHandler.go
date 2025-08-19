@@ -84,7 +84,7 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 		}
 		log.Info("Sent gear embed", "user", member.User.ID, "guild", i.GuildID)
 	},
-	"dkp-export": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	"DKP export": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -282,7 +282,7 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 				Content: "Game roles updated"}})
 
 	},
-	"add-game-role": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	"Add game role": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{Flags: discordgo.MessageFlagsEphemeral}})
@@ -340,7 +340,7 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 
 		log.Info("Added game role", "user", i.ApplicationCommandData().TargetID, "guild", i.GuildID, "role", gameRole)
 	},
-	"remove-game-role": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	"Remove game role": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
@@ -399,8 +399,6 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 		log.Info("Removed game role", "user", i.Member.User.ID, "guild", i.GuildID, "role", gameRole)
 	},
 }
-
-
 
 func createEvent(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
