@@ -110,6 +110,7 @@ func main() {
 	log.Info("Shutting down...") // Log when the bot is shutting down
 }
 
+// panicRecover logs and re-panics if a panic occurs during execution.
 func panicRecover() {
 	if r := recover(); r != nil {
 		log.Error("Fate has decided to end this program", "error", r)
@@ -117,6 +118,8 @@ func panicRecover() {
 	}
 }
 
+// initApp reads configuration from environment variables and command-line
+// flags, configuring logging and application-wide settings.
 func initApp() {
 	var enableExtenal bool
 	var externalLogUrl string
