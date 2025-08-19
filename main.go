@@ -130,6 +130,17 @@ func initApp() {
 	var externalLogOrg string
 	var externalLogStream string
 	var logLevelInt int
+	
+	flag.StringVar(&botToken, "t", "", "Bot Token")
+	flag.StringVar(&postgreConnString, "db", "", "PostgreSQL Connection String")
+	flag.BoolVar(&enableExtenal, "extlogenable", false, "Enable External Log")
+	flag.StringVar(&externalLogUrl, "logurl", "", "External Log URL")
+
+	flag.StringVar(&externalLogToken, "logtoken", "", "External Log Token")
+	flag.StringVar(&externalLogOrg, "logorg", "", "External Log Organization")
+	flag.StringVar(&externalLogStream, "logstream", "", "External Log Stream")
+	flag.IntVar(&logLevelInt, "loglevel", 0, "Log Level")
+	flag.Parse()
 	for _, env := range os.Environ() {
 		pair := strings.SplitN(env, "=", 2)
 		if len(pair) != 2 {
@@ -157,17 +168,6 @@ func initApp() {
 			}
 		}
 	}
-	flag.StringVar(&botToken, "t", "", "Bot Token")
-	flag.StringVar(&postgreConnString, "db", "", "PostgreSQL Connection String")
-	flag.BoolVar(&enableExtenal, "extlogenable", false, "Enable External Log")
-	flag.StringVar(&externalLogUrl, "logurl", "", "External Log URL")
-
-	flag.StringVar(&externalLogToken, "logtoken", "", "External Log Token")
-	flag.StringVar(&externalLogOrg, "logorg", "", "External Log Organization")
-	flag.StringVar(&externalLogStream, "logstream", "", "External Log Stream")
-	flag.IntVar(&logLevelInt, "loglevel", 0, "Log Level")
-	flag.Parse()
-
 	var logLevel slog.Level
 	switch logLevelInt {
 	case -4:
