@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -27,7 +28,7 @@ func Init(location string, loggger *slog.Logger) {
 	for _, file := range files {
 		if !file.IsDir() && strings.HasSuffix(file.Name(), ".sql") {
 			log.Info("Found migration", "name", strings.TrimSuffix(file.Name(), ".sql"))
-			migrationsList = append(migrationsList, Migration{Name: strings.TrimSuffix(file.Name(), ".sql"), path: location + file.Name()})
+			migrationsList = append(migrationsList, Migration{Name: strings.TrimSuffix(file.Name(), ".sql"), path: filepath.Join(location, file.Name())})
 		}
 	}
 
