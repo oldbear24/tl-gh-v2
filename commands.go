@@ -4,7 +4,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var serverAdminPermission = int64(discordgo.PermissionAdministrator | discordgo.PermissionManageGuild)
+var manageGuildPerm = int64(discordgo.PermissionManageGuild)
+//var serverAdminPermission = int64(discordgo.PermissionAdministrator | discordgo.PermissionManageGuild)
 var commands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "ping",
@@ -105,9 +106,9 @@ var commands = []*discordgo.ApplicationCommand{
 		Type: discordgo.UserApplicationCommand,
 	},
 	{
-		Name:        "set_game_roles",
-		Description: "Set game roles for server",
-		DefaultMemberPermissions: &serverAdminPermission,
+		Name:                     "set_game_roles",
+		Description:              "Set game roles for server",
+		DefaultMemberPermissions: &manageGuildPerm,
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionRole,
