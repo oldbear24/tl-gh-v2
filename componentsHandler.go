@@ -30,6 +30,7 @@ var componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.Inte
 			log.Error("Could not edit interaction message", "error", err)
 			return
 		}
+		log.Debug("Updated player role", "user", i.Member.User.ID, "guild", i.GuildID, "role", roleString)
 	},
 	"set_cp": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -53,7 +54,7 @@ var componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.Inte
 		})
 	},
 	"set_weapon_1": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		
+
 		setWeapon(s, i, "1")
 
 	},
@@ -62,7 +63,7 @@ var componentsHandlers = map[string]func(s *discordgo.Session, i *discordgo.Inte
 	},
 	"set_build": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseModal,		
+			Type: discordgo.InteractionResponseModal,
 			Data: &discordgo.InteractionResponseData{
 				CustomID: "set_build_modal",
 				Title:    "Set your build URL",
@@ -113,6 +114,7 @@ func setWeapon(s *discordgo.Session, i *discordgo.InteractionCreate, weapon stri
 		log.Error("Could not edit interaction message", "error", err)
 		return
 	}
+	log.Debug("Updated player weapon", "user", i.Member.User.ID, "guild", i.GuildID, "slot", weapon, "weapon", weaponString)
 }
 
 func setEventParcitipation(s *discordgo.Session, i *discordgo.InteractionCreate, status string) {
@@ -125,7 +127,7 @@ func setEventParcitipation(s *discordgo.Session, i *discordgo.InteractionCreate,
 	defer conn.Release()
 	var eventId int
 	var state string
-	err=conn.QueryRow(context.Background(), `select id,state from events where guild=$1 and message_id=$2`, i.GuildID, eventMessageId).Scan(&eventId, &state)
+	err = conn.QueryRow(context.Background(), `select id,state from events where guild=$1 and message_id=$2`, i.GuildID, eventMessageId).Scan(&eventId, &state)
 	if err != nil {
 		log.Error("Could not get event id", "error", err)
 		return
@@ -155,6 +157,7 @@ DO UPDATE SET
 		log.Error("Could not insert event participant", "error", err)
 		return
 	}
+	log.Debug("Updated event participation", "user", i.Member.User.ID, "guild", i.GuildID, "event", eventId, "status", status)
 	updateEventMessage(s, i, conn.Conn(), eventId)
 }
 

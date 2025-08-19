@@ -53,6 +53,7 @@ func syncMembers(s *discordgo.Session) {
 			log.Error("Could not get guildId from db row", "error", err)
 			continue
 		}
+		log.Debug("Syncing members for guild", "guild", id)
 		var after string
 
 		tx, err := pool.Begin(context.Background())
@@ -86,6 +87,7 @@ func syncMembers(s *discordgo.Session) {
 			}
 		}
 		tx.Commit(context.Background())
+		log.Debug("Finished syncing members", "guild", id)
 	}
 }
 
