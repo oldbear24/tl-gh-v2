@@ -36,7 +36,7 @@ var commands = []*discordgo.ApplicationCommand{
 		},
 	},*/
 	{
-		Name: "dkp-export",
+		Name: "DKP export",
 		Type: discordgo.UserApplicationCommand,
 	},
 	{
@@ -97,11 +97,11 @@ var commands = []*discordgo.ApplicationCommand{
 		},
 	},*/
 	{
-		Name: "add-game-role",
+		Name: "Add game role",
 		Type: discordgo.UserApplicationCommand,
 	},
 	{
-		Name: "remove-game-role",
+		Name: "Remove game role",
 		Type: discordgo.UserApplicationCommand,
 	},
 	{
