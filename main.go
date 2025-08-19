@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -43,7 +44,9 @@ func main() {
 		log.Error("Unable to connect to database", "error", err)
 		panic(err)
 	}
-	pgmigrations.Init("./migrations/", log)
+	exePath, _ := os.Executable()
+	exrDir := filepath.Dir(exePath)
+	pgmigrations.Init(filepath.Join(exrDir, "migrations"), log)
 	mConn, err := pool.Acquire(context.Background())
 	if err != nil {
 		log.Error("")
