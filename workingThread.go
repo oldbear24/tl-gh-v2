@@ -85,6 +85,10 @@ func syncMembers(s *discordgo.Session) {
 					log.Error("Could not update user", "error", err)
 				}
 			}
+			log.Debug("Synced members batch", "guild", id, "after", after)
+			// To avoid hitting rate limits
+			time.Sleep(30 * time.Second)
+
 		}
 		tx.Commit(context.Background())
 		log.Debug("Finished syncing members", "guild", id)
