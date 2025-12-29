@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/bwmarrin/discordgo v0.29.0
-	github.com/jackc/pgx/v5 v5.7.6
+	github.com/jackc/pgx/v5 v5.8.0
 	github.com/oldbear24/openobserve-go-slog-writer v0.0.2
 	golang.org/x/crypto v0.45.0
 )
